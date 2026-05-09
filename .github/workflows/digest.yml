@@ -1,0 +1,60 @@
+name: Stock Digest
+
+on:
+  schedule:
+    # GitHub Actions cron is in UTC. CST is UTC-6 (CDT is UTC-5).
+    # We schedule for both so daylight saving doesn't shift our send time.
+    # 6am CST  = 12:00 UTC (CST) / 11:00 UTC (CDT)
+    # 7pm CST  = 01:00 UTC next day (CST) / 00:00 UTC (CDT)
+    # We run twice for each slot — the duplicate during DST transitions is
+    # cheap insurance. If you hate that, narrow to one of each.
+    - cron: "0 11 * * 1-5"   # 6am CDT, weekdays — US market open hours
+    - cron: "0 12 * * 1-5"   # 6am CST, weekdays — US market open hours
+    - cron: "0 0 * * 1-5"    # 7pm CDT, weekdays — Indian market window
+    - cron: "0 1 * * 1-5"    # 7pm CST, weekdays — Indian market window
+  workflow_dispatch:
+    inputs:
+      market:
+        description: "Which market to digest"
+        type: choice
+        options: [us, india]
+        default: us
+
+jobs:
+  digest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Determine market
+        id: market
+        run: |
+          if [ -n "${{ github.event.inputs.market }}" ]; then
+            echo "market=${{ github.event.inputs.market }}" >> $GITHUB_OUTPUT
+          else
+            # Cron-driven: pick market based on UTC hour
+            HOUR=$(date -u +%H)
+            if [ "$HOUR" = "11" ] || [ "$HOUR" = "12" ]; then
+              echo "market=us" >> $GITHUB_OUTPUT
+            else
+              echo "market=india" >> $GITHUB_OUTPUT
+            fi
+          fi
+
+      - name: Run digest
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          EMAIL_TO: ${{ secrets.EMAIL_TO }}
+          CLAUDE_MODEL: ${{ vars.CLAUDE_MODEL || 'claude-haiku-4-5-20251001' }}
+        run: python -m src.run --market ${{ steps.market.outputs.market }}
