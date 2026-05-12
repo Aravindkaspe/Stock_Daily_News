@@ -1,5 +1,5 @@
 """
-Calls the Anthropic API with web search enabled to:
+Calls the Gemini AI Studio API with Google Search grounding to:
 1. Fetch the latest material news, corporate actions, and announcements per ticker
 2. Combine that with pre-computed technicals
 3. Return a polished HTML digest ready to email
@@ -12,16 +12,12 @@ import logging
 import os
 from typing import Any
 
-import anthropic
+from google import genai
+from google.genai import types
 
 log = logging.getLogger(__name__)
 
-# Default to Haiku for cost efficiency. Override via env var if you want
-# Sonnet-quality output. Haiku 4.5 is $1/$5 per MTok vs Sonnet 4.6 at $3/$15.
-MODEL = os.environ.get("CLAUDE_MODEL", "claude-haiku-4-5-20251001")
-
-# Web search budget per run. Each search is $0.01. 5 per ticker is generous.
-MAX_SEARCHES_PER_RUN = int(os.environ.get("MAX_SEARCHES_PER_RUN", "40"))
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
 
 
 SYSTEM_PROMPT = """You are a financial research assistant producing a daily \
@@ -76,29 +72,20 @@ def build_user_message(market_name: str, technicals: list[dict[str, Any]]) -> st
 
 
 def generate_digest(market_name: str, technicals: list[dict[str, Any]]) -> str:
-    """Call Claude with web search and return the HTML email body."""
-    client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
+    """Call Gemini with Google Search grounding and return the HTML email body."""
+    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    response = client.messages.create(
+    response = client.models.generate_content(
         model=MODEL,
-        max_tokens=8000,
-        system=SYSTEM_PROMPT,
-        messages=[{"role": "user", "content": build_user_message(market_name, technicals)}],
-        tools=[
-            {
-                "type": "web_search_20250305",
-                "name": "web_search",
-                "max_uses": MAX_SEARCHES_PER_RUN,
-            }
-        ],
+        contents=build_user_message(market_name, technicals),
+        config=types.GenerateContentConfig(
+            system_instruction=SYSTEM_PROMPT,
+            tools=[types.Tool(google_search=types.GoogleSearch())],
+            max_output_tokens=8000,
+        ),
     )
 
-    # Response can interleave text, tool_use, and tool_result blocks. We want
-    # only the final text the model produced after all its searches finished.
-    html_parts = [
-        block.text for block in response.content if getattr(block, "type", None) == "text"
-    ]
-    html = "\n".join(html_parts).strip()
+    html = response.text.strip()
 
     # Defensive cleanup — if the model wraps in code fences despite instructions.
     if html.startswith("```"):

@@ -2,9 +2,9 @@
 Entrypoint for the daily stock digest.
 
 Usage:
-    python -m src.run --market us
-    python -m src.run --market india
-    python -m src.run                # auto-detect from current CST hour
+    python -m stock_news_daily.run --market us
+    python -m stock_news_daily.run --market india
+    python -m stock_news_daily.run    # auto-detect from current CST hour
 
 Run twice daily via GitHub Actions:
     6am CST  -> --market us
@@ -22,9 +22,9 @@ from pathlib import Path
 
 import pytz
 
-from src.digest import generate_digest
-from src.mailer import send_digest
-from src.technicals import get_technicals_for_list
+from stock_news_daily.digest import generate_digest
+from stock_news_daily.mailer import send_digest
+from stock_news_daily.technicals import get_technicals_for_list
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 log = logging.getLogger("digest")
