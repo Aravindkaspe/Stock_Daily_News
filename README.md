@@ -54,7 +54,7 @@ pip install -r requirements.txt
 pip install -e .
 
 # Copy the env template and fill in your secrets
-cp .env.example .env
+cp .env .env
 
 # Print the HTML without sending an email
 python -m stock_news_daily.run --market us --dry-run

@@ -85,6 +85,16 @@ def generate_digest(market_name: str, technicals: list[dict[str, Any]]) -> str:
         ),
     )
 
+    # response.text is Optional[str] — None when blocked by safety filters,
+    # quota exceeded, or the model returned only non-text parts.
+    if not response.text:
+        finish = (
+            response.candidates[0].finish_reason
+            if response.candidates
+            else "unknown"
+        )
+        raise RuntimeError(f"Gemini returned no text content (finish_reason={finish})")
+
     html = response.text.strip()
 
     # Defensive cleanup — if the model wraps in code fences despite instructions.

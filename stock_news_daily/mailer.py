@@ -12,8 +12,8 @@ log = logging.getLogger(__name__)
 
 def send_digest(subject: str, html: str) -> None:
     resend.api_key = os.environ["RESEND_API_KEY"]
-    sender = os.environ["EMAIL_FROM"]  # e.g. "Stock Digest <digest@yourdomain.com>"
-    recipient = os.environ["EMAIL_TO"]  # your email
+    sender = os.environ["EMAIL_FROM"]
+    recipient = os.environ["EMAIL_TO"]
 
     result = resend.Emails.send(
         {
