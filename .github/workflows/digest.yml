@@ -2,15 +2,10 @@ name: Stock Digest
 
 on:
   schedule:
-    # GitHub Actions cron is in UTC. CST is UTC-6 (CDT is UTC-5).
-    # We schedule for both so daylight saving doesn't shift our send time.
-    # 6am CST  = 12:00 UTC (CST) / 11:00 UTC (CDT)
-    # 7pm CST  = 01:00 UTC next day (CST) / 00:00 UTC (CDT)
-    # We run twice for each slot — the duplicate during DST transitions is
-    # cheap insurance. If you hate that, narrow to one of each.
-    - cron: "0 11 * * 1-5"   # 6am CDT, weekdays — US market open hours
+    # GitHub Actions cron is in UTC. CST = UTC-6.
+    # 6am CST  = 12:00 UTC
+    # 7pm CST  = 01:00 UTC (next day)
     - cron: "0 12 * * 1-5"   # 6am CST, weekdays — US market open hours
-    - cron: "0 0 * * 1-5"    # 7pm CDT, weekdays — Indian market window
     - cron: "0 1 * * 1-5"    # 7pm CST, weekdays — Indian market window
   workflow_dispatch:
     inputs:
@@ -56,5 +51,5 @@ jobs:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.0-flash' }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
         run: python -m stock_news_daily.run --market ${{ steps.market.outputs.market }}

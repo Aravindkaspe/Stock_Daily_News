@@ -1,5 +1,3 @@
-"""Send the digest via Resend. 3,000 emails/month free."""
-
 from __future__ import annotations
 
 import logging

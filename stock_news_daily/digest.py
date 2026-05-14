@@ -10,14 +10,16 @@ from __future__ import annotations
 import json
 import logging
 import os
+import time
 from typing import Any
 
 from google import genai
 from google.genai import types
+from google.genai.errors import ClientError
 
 log = logging.getLogger(__name__)
 
-MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.0-flash")
+MODEL = os.environ.get("GEMINI_MODEL", "gemini-2.5-flash")
 
 
 SYSTEM_PROMPT = """You are a financial research assistant producing a daily \
@@ -72,21 +74,36 @@ def build_user_message(market_name: str, technicals: list[dict[str, Any]]) -> st
 
 
 def generate_digest(market_name: str, technicals: list[dict[str, Any]]) -> str:
-    """Call Gemini with Google Search grounding and return the HTML email body."""
     client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=build_user_message(market_name, technicals),
-        config=types.GenerateContentConfig(
-            system_instruction=SYSTEM_PROMPT,
-            tools=[types.Tool(google_search=types.GoogleSearch())],
-            max_output_tokens=8000,
-        ),
-    )
+    last_exc: Exception | None = None
+    for attempt in range(5):
+        if attempt:
+            wait = 2 ** attempt
+            log.warning("Gemini 429 — retrying in %ds (attempt %d/5)", wait, attempt + 1)
+            time.sleep(wait)
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=build_user_message(market_name, technicals),
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    tools=[types.Tool(google_search=types.GoogleSearch())],
+                    automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                        maximum_remote_calls=3,
+                    ),
+                    max_output_tokens=8000,
+                ),
+            )
+            break
+        except ClientError as exc:
+            if exc.code == 429:
+                last_exc = exc
+                continue
+            raise
+    else:
+        raise RuntimeError("Gemini rate limit still exceeded after 5 retries") from last_exc
 
-    # response.text is Optional[str] — None when blocked by safety filters,
-    # quota exceeded, or the model returned only non-text parts.
     if not response.text:
         finish = (
             response.candidates[0].finish_reason
@@ -97,7 +114,6 @@ def generate_digest(market_name: str, technicals: list[dict[str, Any]]) -> str:
 
     html = response.text.strip()
 
-    # Defensive cleanup — if the model wraps in code fences despite instructions.
     if html.startswith("```"):
         html = html.split("\n", 1)[1] if "\n" in html else html
         html = html.rsplit("```", 1)[0]

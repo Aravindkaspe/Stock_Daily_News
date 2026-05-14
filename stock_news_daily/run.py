@@ -21,6 +21,9 @@ from datetime import datetime
 from pathlib import Path
 
 import pytz
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from stock_news_daily.digest import generate_digest
 from stock_news_daily.mailer import send_digest
