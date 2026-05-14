@@ -1,13 +1,11 @@
 {
-  "_comment": "Edit this file to change your watchlists. Commit and push — the next scheduled run picks it up automatically.",
   "us": {
-    "tickers": ["AAPL", "NVDA", "MSFT", "TSLA", "GOOGL"],
-    "market_name": "US Markets",
-    "exchange_hint": "NYSE/NASDAQ"
+    "tickers": ["TOST", "WMT", "COST", "CRM", "SOFI", "LMND", "HIMS", "NBIS", "HOOD", "JPM", "META", "AMD", "AAPL", "AMZN", "TSLA", "NFLX", "NVDA", "GOOG"],
+    "market_name": "US Markets"
   },
   "india": {
-    "tickers": ["RELIANCE.NS", "TCS.NS", "INFY.NS", "HDFCBANK.NS", "ICICIBANK.NS"],
-    "market_name": "Indian Markets",
-    "exchange_hint": "NSE — use .NS suffix for yfinance compatibility"
+    "tickers": ["ZENTEC.NS", "ZAGGLE.NS", "VEDL.NS", "VBL.NS", "TITAN.NS", "TIPSMUSIC.NS", "TATASTEEL.NS", "TATAPOWER.NS", "TATACONSUM.NS", "SUZLON.NS",
+                "SMLMAH.NS", "SBFC.NS", "ICICIBANK.NS"],
+    "market_name": "Indian Markets"
   }
 }
