@@ -2,5 +2,4 @@ google-genai>=0.8.0
 python-dotenv>=1.0.0
 fintools-mcp>=0.1.0
 yfinance>=0.2.40
-resend>=2.0.0
 pytz>=2024.1

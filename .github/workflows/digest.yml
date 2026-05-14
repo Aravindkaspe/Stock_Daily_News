@@ -48,8 +48,8 @@ jobs:
       - name: Run digest
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
-          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+          GMAIL_USER: ${{ secrets.GMAIL_USER }}
+          GMAIL_KEY: ${{ secrets.GMAIL_KEY }}
           EMAIL_TO: ${{ secrets.EMAIL_TO }}
           GEMINI_MODEL: ${{ vars.GEMINI_MODEL || 'gemini-2.5-flash' }}
         run: python -m stock_news_daily.run --market ${{ steps.market.outputs.market }}

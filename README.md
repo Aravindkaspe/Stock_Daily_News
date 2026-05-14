@@ -2,7 +2,7 @@
 
 Twice-daily LLM-curated stock news emailed to you. Combines technical analysis
 (via [fintools-mcp](https://github.com/slimbiggins007/fintools-mcp)) with web-searched
-news, corporate actions, and announcements, summarized by Claude.
+news, corporate actions, and announcements, summarized by Gemini.
 
 - **6am CST weekdays** — US market news (NYSE/NASDAQ tickers)
 - **7pm CST weekdays** — India market news (NSE tickers)

@@ -92,7 +92,7 @@ def generate_digest(market_name: str, technicals: list[dict[str, Any]]) -> str:
                     automatic_function_calling=types.AutomaticFunctionCallingConfig(
                         maximum_remote_calls=3,
                     ),
-                    max_output_tokens=8000,
+                    max_output_tokens=16000,
                 ),
             )
             break
