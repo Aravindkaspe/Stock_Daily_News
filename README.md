@@ -1,4 +1,4 @@
-# Stock Daily News
+# Stock News Notification
 
 Twice-daily AI-curated stock digest delivered straight to your inbox. Combines real-time technical indicators with web-searched news, earnings, corporate actions, and filings — summarized by Google Gemini and sent via Gmail.
 
