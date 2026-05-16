@@ -2,11 +2,12 @@ name: Stock Digest
 
 on:
   schedule:
-    # GitHub Actions cron is in UTC. CST = UTC-6.
-    # 6am CST  = 12:00 UTC
-    # 7pm CST  = 01:00 UTC (next day)
-    - cron: "0 12 * * 1-5"   # 6am CST, weekdays — US market open hours
-    - cron: "0 1 * * 1-5"    # 7pm CST, weekdays — Indian market window
+    # GitHub Actions cron is UTC. Scheduled 3hrs early to absorb GitHub's typical delay.
+    # Currently CDT (UTC-5, Mar–Nov): update to 09 & 22 UTC in November when CST begins.
+    # 6am CDT = 11:00 UTC → trigger at 08:00 UTC
+    # 7pm CDT = 00:00 UTC → trigger at 21:00 UTC
+    - cron: "0 8 * * 1-5"    # → ~6am CDT after delay — US digest
+    - cron: "0 21 * * 1-5"   # → ~7pm CDT after delay — India digest
   workflow_dispatch:
     inputs:
       market:
@@ -35,14 +36,10 @@ jobs:
         run: |
           if [ -n "${{ github.event.inputs.market }}" ]; then
             echo "market=${{ github.event.inputs.market }}" >> $GITHUB_OUTPUT
+          elif [ "${{ github.event.schedule }}" = "0 8 * * 1-5" ] || [ "${{ github.event.schedule }}" = "0 9 * * 1-5" ]; then
+            echo "market=us" >> $GITHUB_OUTPUT
           else
-            # Cron-driven: pick market based on UTC hour
-            HOUR=$(date -u +%H)
-            if [ "$HOUR" = "11" ] || [ "$HOUR" = "12" ]; then
-              echo "market=us" >> $GITHUB_OUTPUT
-            else
-              echo "market=india" >> $GITHUB_OUTPUT
-            fi
+            echo "market=india" >> $GITHUB_OUTPUT
           fi
 
       - name: Run digest
